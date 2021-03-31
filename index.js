@@ -18,6 +18,8 @@ const port = 8081
 
 let cors = require('cors')
 
+
+const jokes = require('./jokes.json')
 const frontendURL = process.env.FRONTEND_URL || 'http://localhost:8000'
 const whitelist = ['http://localhost:8000', 'http://localhost:8081', 'https://my-ocular.jeffalo.net', 'https://ocular.jeffalo.net']
 const emojis = ['👍', '👎', '😄', '🎉', '😕', '❤️', '🚀', '👀'] // stolen from github. TODO: use emojis that make sense for the forums
@@ -38,15 +40,39 @@ app.get('/', async (req, res) => {
     res.redirect(frontendURL)
 })
 
-app.get('/api/users', cors(), async (req, res) => {
-    const page = parseInt(req.query.page) || 0;
-    let userList = await users.find({}, { sort: { _id: -1 }, limit: 15, skip: page * 15 })
+app.options('/api/users', cors(corsOptions)) // enable pre-flight request for user list
 
+app.get('/api/users', cors(corsOptions), async (req, res) => {
+    // const page = parseInt(req.query.page) || 0;
+    // let userList = await users.find({}, { sort: { _id: -1 }, limit: 15, skip: page * 15 })
+    let userList = await users.find({}) // TODO: pagination (see above)
     res.json(userList)
 })
 
 app.get('/api/user/:name', cors(), async (req, res) => {
+    let noReplace = req.query.noReplace
     let user = await getUserData(req.params.name.replace('*', ''))
+    let allUsers = await users.find()
+
+    if(!noReplace && user){
+        user.status = user.status.replace(/(?<!\\){joke}/g, jokes[Math.floor(Math.random() * jokes.length)])
+        user.status = user.status.replace(/\\({joke})/g,"$1")
+        
+        user.status = user.status.replace(/(?<!\\){online}/g, sessions.length)
+        user.status = user.status.replace(/\\({online})/g,"$1")
+
+        user.status = user.status.replace(/(?<!\\){total}/g, allUsers.length)
+        user.status = user.status.replace(/\\({total})/g,"$1")
+
+        if(user.status.match(/(?<!\\){count}/)){
+            let apiRes = await fetch(`https://scratchdb.lefty.one/v3/forum/user/info/${user.name}`)
+            let data = await apiRes.json()
+
+            user.status = user.status.replace(/(?<!\\){count}/g, data.counts.total.count)
+            user.status = user.status.replace(/\\({count})/g,"$1")
+        }
+    }
+
     user ? res.json(user) : res.json({ error: "no user found" })
 })
 
@@ -71,15 +97,13 @@ app.put('/api/user/:name', cors(), async (req, res) => {
         let user = await getUserData(req.params.name)
 
         if (user) {
-            await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color } })
+            await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": user.name } })
             res.json({ ok: 'user updated' })
         } else {
             // this is an admin trying to update the status of a non-existent user. we should create that user with the specified data.
 
             let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${req.params.name}/`) // get the proper case of the username instead of whatever admin inputted
             let scratchData = await scratchResponse.json()
-
-            console.log(scratchData)
 
             let now = new Date()
 
