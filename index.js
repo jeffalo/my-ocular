@@ -38,6 +38,13 @@ app.get('/', async (req, res) => {
     res.redirect(frontendURL)
 })
 
+app.get('/api/users', cors(), async (req, res) => {
+    const page = parseInt(req.query.page) || 0;
+    let userList = await users.find({}, { sort: { _id: -1 }, limit: 15, skip: page * 15 })
+
+    res.json(userList)
+})
+
 app.get('/api/user/:name', cors(), async (req, res) => {
     let user = await getUserData(req.params.name.replace('*', ''))
     user ? res.json(user) : res.json({ error: "no user found" })
