@@ -45,8 +45,23 @@ app.options('/api/users', cors(corsOptions)) // enable pre-flight request for us
 app.get('/api/users', cors(corsOptions), async (req, res) => {
     // const page = parseInt(req.query.page) || 0;
     // let userList = await users.find({}, { sort: { _id: -1 }, limit: 15, skip: page * 15 })
-    let userList = await users.find({}) // TODO: pagination (see above)
-    res.json(userList)
+    if (!req.headers.authorization) {
+        res.json({ error: 'you need auth' })
+    } else {
+        let session = findSession(req.headers.authorization)
+
+        if (!session) {
+            return res.json({ error: 'invalid auth' })
+        }
+
+        let sessionUser = await getUserData(session.name)
+
+        if (!sessionUser.admin) {
+            return res.json({ error: `only admins can get a list of users.` })
+        }
+        let userList = await users.find({}, { sort: { "meta.updated": -1, _id:-1 } }) // TODO: pagination (see above)
+        res.json(userList)
+    }
 })
 
 app.get('/api/user/:name', cors(), async (req, res) => {
