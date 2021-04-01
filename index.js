@@ -97,8 +97,8 @@ app.put('/api/user/:name', cors(), async (req, res) => {
         let user = await getUserData(req.params.name)
 
         if (user) {
-            await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": user.name } })
-            res.json({ ok: 'user updated' })
+            // await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": user.name } })
+            res.json({ error: 'for security reasons ocular statuses can not be updated at this time. sorry for the inconvenience' })
         } else {
             // this is an admin trying to update the status of a non-existent user. we should create that user with the specified data.
 
