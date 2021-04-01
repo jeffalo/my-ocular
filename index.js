@@ -116,7 +116,7 @@ app.put('/api/user/:name', cors(), async (req, res) => {
         
         if (user) {
             let now = new Date()
-            await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": user.name, "meta.updated": now.toISOString() } })
+            await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
             res.json({ ok: 'user updated' })
         } else {
             // this is an admin trying to update the status of a non-existent user. we should create that user with the specified data.
