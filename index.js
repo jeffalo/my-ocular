@@ -332,7 +332,7 @@ app.get('/auth/info', cors(corsOptions), async (req, res) => {
         let session = findSessionByOneTimeToken(req.query.token)
         if (session) {
             res.json({ name: session.name, token: session.token })
-            persistedSessions.update({ oneTimeToken: req.query.token }, { $set: { oneTimeToken: null } })
+            await persistedSessions.update({ oneTimeToken: req.query.token }, { $set: { oneTimeToken: null } })
             session.oneTimeToken = null
         } else {
             res.json({ error: 'no session found. invalid or expired one time token' })
@@ -440,12 +440,12 @@ async function generateToken() {
     return token;
 }
 
-function addSession(token, name, oneTimeToken, time = false) {
+async function addSession(token, name, oneTimeToken, time = false) {
     // defaults to 6 hours
     // one time token is used for the confirm login screen, this prevents someone from reading the url and logging in. i know its not a perfect solution but its the best i can do
 
     sessions.push({ name, token, oneTimeToken });
-    persistedSessions.insert({ name, token, oneTimeToken })
+    await persistedSessions.insert({ name, token, oneTimeToken })
 
     if (time) { // i doubt any sessions will be set with a time, because auth isnt fun to do. sessions should last "forever"
         setTimeout(() => {
@@ -455,11 +455,11 @@ function addSession(token, name, oneTimeToken, time = false) {
     }
 }
 
-function removeSession(token) {
+async function removeSession(token) {
     sessions = sessions.filter(obj => {
         return obj.token !== token;
     })
-    persistedSessions.remove({ token })
+    await persistedSessions.remove({ token })
 }
 
 function findSession(token) {
