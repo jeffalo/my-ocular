@@ -36,10 +36,6 @@ const corsOptions = {
 
 app.use(express.json()); //Used to parse JSON bodies
 
-app.get('/', async (req, res) => {
-    res.redirect(frontendURL)
-})
-
 app.options('/api/users', cors(corsOptions)) // enable pre-flight request for user list
 
 app.get('/api/users', cors(corsOptions), async (req, res) => {
@@ -369,6 +365,12 @@ app.get('/auth/me', cors(corsOptions), async (req, res) => {
         let user = await getUserData(session.name)
         user ? res.json(user) : res.json({ error: "no user found.. this shouldn't happen" })
     }
+})
+
+// 404. catch all which redirects to frontend
+
+app.use((req, res, next) => {
+    res.redirect(`${frontendURL}${req.path}`)
 })
 
 function getUserData(name) {
