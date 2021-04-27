@@ -111,6 +111,8 @@ app.put('/api/user/:name', cors(), async (req, res) => {
         // return res.json({ error: 'for security reasons ocular statuses can not be updated at this time. sorry for the inconvenience' })
         
         if (user) {
+            if(user.banned) return res.json({ error: `you are banned from ocular. visit https://my-ocular.jeffalo.net/ban-info/${user.name} for more information.` })
+
             let now = new Date()
             await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
             res.json({ ok: 'user updated' })
@@ -365,6 +367,10 @@ app.get('/auth/me', cors(corsOptions), async (req, res) => {
         let user = await getUserData(session.name)
         user ? res.json(user) : res.json({ error: "no user found.. this shouldn't happen" })
     }
+})
+
+app.get('/ban-info/:name', (req, res) => {
+    res.redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
 })
 
 // 404. catch all which redirects to frontend
