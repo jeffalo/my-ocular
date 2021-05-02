@@ -138,14 +138,6 @@ app.put('/api/user/:name', cors(), async (req, res) => {
     }
 })
 
-app.get('/api/user/picture', cors(), async (req, res) => {
-    let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${user}/`)
-    let scratchData = await scratchResponse.json()
-    let pictureURL = 'https://cdn2.scratch.mit.edu/get_image/user/0_90x90.png'
-    if (scratchData.profile) pictureURL = scratchData.profile.images['90x90']
-    res.redirect(pictureURL)
-})
-
 app.options('/api/starred/:id', cors(corsOptions)) // enable pre-flight request for getting star data
 
 app.get('/api/starred/:id', cors(corsOptions), async (req, res) => { // returns whether the logged in user starred a post
