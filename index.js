@@ -55,7 +55,7 @@ app.get('/api/users', cors(corsOptions), async (req, res) => {
         if (!sessionUser.admin) {
             return res.json({ error: `only admins can get a list of users.` })
         }
-        let userList = await users.find({}, { sort: { "meta.updated": -1, _id:-1 } }) // TODO: pagination (see above)
+        let userList = await users.find({}, { sort: { "meta.updated": -1, _id: -1 } }) // TODO: pagination (see above)
         res.json(userList)
     }
 })
@@ -65,22 +65,22 @@ app.get('/api/user/:name', cors(), async (req, res) => {
     let user = await getUserData(req.params.name.replace('*', ''))
     let allUsers = await users.find()
 
-    if(!noReplace && user){
+    if (!noReplace && user) {
         user.status = user.status.replace(/(?<!\\){joke}/g, jokes[Math.floor(Math.random() * jokes.length)])
-        user.status = user.status.replace(/\\({joke})/g,"$1")
-        
+        user.status = user.status.replace(/\\({joke})/g, "$1")
+
         user.status = user.status.replace(/(?<!\\){online}/g, sessions.length)
-        user.status = user.status.replace(/\\({online})/g,"$1")
+        user.status = user.status.replace(/\\({online})/g, "$1")
 
         user.status = user.status.replace(/(?<!\\){total}/g, allUsers.length)
-        user.status = user.status.replace(/\\({total})/g,"$1")
+        user.status = user.status.replace(/\\({total})/g, "$1")
 
-        if(user.status.match(/(?<!\\){count}/)){
+        if (user.status.match(/(?<!\\){count}/)) {
             let apiRes = await fetch(`https://scratchdb.lefty.one/v3/forum/user/info/${user.name}`)
             let data = await apiRes.json()
 
             user.status = user.status.replace(/(?<!\\){count}/g, data.counts.total.count)
-            user.status = user.status.replace(/\\({count})/g,"$1")
+            user.status = user.status.replace(/\\({count})/g, "$1")
         }
     }
 
@@ -109,9 +109,9 @@ app.put('/api/user/:name', cors(), async (req, res) => {
 
         // temporary security fix
         // return res.json({ error: 'for security reasons ocular statuses can not be updated at this time. sorry for the inconvenience' })
-        
+
         if (user) {
-            if(user.banned) return res.json({ error: `you are banned from ocular. visit https://my-ocular.jeffalo.net/ban-info/${user.name} for more information.` })
+            if (user.banned) return res.json({ error: `you are banned from ocular. visit https://my-ocular.jeffalo.net/ban-info/${user.name} for more information.` })
 
             let now = new Date()
             await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
@@ -260,7 +260,9 @@ app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // react
             return res.json({ error: 'post doesnt exist' })
         }
         if (!emojis.includes(req.body.emoji)) {
-            return res.json({ error: 'invalid emoji' })
+            let reactionWithEmoji = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji }) // find a reaction with that emoji to check if thats a valid reaction option (its set by admin if invalid)
+
+            if(!reactionWithEmoji && !user.admin) return res.json({ error: 'invalid emoji' })
         }
         let postReaction = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji, user: user.name })
         if (postReaction) {
@@ -408,7 +410,14 @@ async function getPostReactions(id) {
     return new Promise(async (resolve, reject) => {
         let postReactions = await reactions.find({ post: id })
         let grouped = []
-        emojis.forEach(emoji => {
+
+        let postEmojis = emojis.slice(); // .slice so the original cant be edited
+
+        postReactions.forEach(reaction => {
+            if (!postEmojis.includes(reaction.emoji)) postEmojis.push(reaction.emoji)
+        })
+
+        postEmojis.forEach(emoji => {
             grouped.push({
                 emoji, reactions: postReactions.filter(r => r.emoji == emoji)
             })
