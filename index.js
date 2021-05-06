@@ -115,14 +115,8 @@ app.put('/api/user/:name', cors(), async (req, res) => {
             if (user.banned) return res.json({ error: `you are banned from ocular. visit https://my-ocular.jeffalo.net/ban-info/${user.name} for more information.` })
 
             let now = new Date()
-            let status = req.body.status
-            
-            function limitLength(string, limit) {  
-                return string.substring(0, limit)
-            }
-            
-            status = limitLength(status, statusLengthLimit);
-            
+            let status = req.body.status.substring(0, statusLengthLimit)
+                        
             await users.update({ name: user.name }, { $set: { status: status, color: req.body.color, "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
             res.json({ ok: 'user updated' })
         } else {
