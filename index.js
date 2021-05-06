@@ -23,6 +23,7 @@ const jokes = require('./jokes.json')
 const frontendURL = process.env.FRONTEND_URL || 'http://localhost:8000'
 const whitelist = ['http://localhost:8000', 'http://localhost:8081', 'https://my-ocular.jeffalo.net', 'https://ocular.jeffalo.net']
 const emojis = ['👍', '👎', '😄', '🎉', '😕', '❤️', '🚀', '👀'] // stolen from github. TODO: use emojis that make sense for the forums
+const statusLengthLimit = 150 // Maximum length for statuses
 
 const corsOptions = {
     origin: function (origin, callback) {
@@ -114,7 +115,15 @@ app.put('/api/user/:name', cors(), async (req, res) => {
             if (user.banned) return res.json({ error: `you are banned from ocular. visit https://my-ocular.jeffalo.net/ban-info/${user.name} for more information.` })
 
             let now = new Date()
-            await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
+            let status = req.body.status
+            
+            function limitLength(string, limit) {  
+                return string.substring(0, limit)
+            }
+            
+            status = limitLength(status, statusLengthLimit);
+            
+            await users.update({ name: user.name }, { $set: { status: status, color: req.body.color, "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
             res.json({ ok: 'user updated' })
         } else {
             // this is an admin trying to update the status of a non-existent user. we should create that user with the specified data.
