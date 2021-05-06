@@ -23,7 +23,7 @@ const jokes = require('./jokes.json')
 const frontendURL = process.env.FRONTEND_URL || 'http://localhost:8000'
 const whitelist = ['http://localhost:8000', 'http://localhost:8081', 'https://my-ocular.jeffalo.net', 'https://ocular.jeffalo.net']
 const emojis = ['👍', '👎', '😄', '🎉', '😕', '❤️', '🚀', '👀'] // stolen from github. TODO: use emojis that make sense for the forums
-const statusLengthLimit = 150 // Maximum length for statuses
+const statusLengthLimit = 300 // Maximum length for statuses
 
 const corsOptions = {
     origin: function (origin, callback) {
