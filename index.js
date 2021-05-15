@@ -138,8 +138,8 @@ app.put('/api/user/:name', cors(), async (req, res) => {
     }
 })
 
-app.get('/api/user/picture', cors(), async (req, res) => {
-    let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${user}/`)
+app.get('/api/user/:user/picture', cors(), async (req, res) => {
+    let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${req.params.user}/`)
     let scratchData = await scratchResponse.json()
     let pictureURL = 'https://cdn2.scratch.mit.edu/get_image/user/0_90x90.png'
     if (scratchData.profile) pictureURL = scratchData.profile.images['90x90']
