@@ -77,9 +77,14 @@ app.get('/api/user/:name', cors(), async (req, res) => {
         if (user.status.match(/(?<!\\){count}/)) {
             let apiRes = await fetch(`https://scratchdb.lefty.one/v3/forum/user/info/${user.name}`)
             let data = await apiRes.json()
+            
 
-            user.status = user.status.replace(/(?<!\\){count}/g, data.counts.total.count)
-            user.status = user.status.replace(/\\({count})/g, "$1")
+            try {
+                user.status = user.status.replace(/(?<!\\){count}/g, data.counts.total.count)
+                user.status = user.status.replace(/\\({count})/g, "$1")
+            } catch(ex) {
+                
+            }
         }
     }
 
