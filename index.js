@@ -110,16 +110,32 @@ app.put('/api/user/:name', cors(), async (req, res) => {
         // return res.json({ error: 'for security reasons ocular statuses can not be updated at this time. sorry for the inconvenience' })
 
         if (user) {
-            if (user.banned) return res.json({ error: `you are banned from ocular. visit https://my-ocular.jeffalo.net/ban-info/${user.name} for more information.` })
+            if (user.banned && !sessionUser.admin) return res.json({ error: `you are banned from ocular. visit https://my-ocular.jeffalo.net/ban-info/${user.name} for more information.` })
 
             let now = new Date()
+
+            if (sessionUser.admin) {
+                // ban user
+                if (req.body.banned) {
+                    await users.update({ name: user.name }, { $set: { banned: req.body.banned } })
+                } else {
+                    await users.update({ name: user.name }, { $unset: { banned: "" } })
+                }
+            }
+
             await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
+
+
             res.json({ ok: 'user updated' })
         } else {
             // this is an admin trying to update the status of a non-existent user. we should create that user with the specified data.
 
             let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${req.params.name}/`) // get the proper case of the username instead of whatever admin inputted
             let scratchData = await scratchResponse.json()
+
+            if(!scratchData.username) {
+                return res.json({ error: "user not found on scratch" })
+            }
 
             let now = new Date()
 
@@ -135,6 +151,38 @@ app.put('/api/user/:name', cors(), async (req, res) => {
             res.json({ ok: 'user added' })
         }
     }
+})
+
+app.delete('/api/user/:name', cors(), async (req, res) => {
+    if (!req.headers.authorization) {
+        return res.json({ error: 'you need auth' })
+    }
+
+    let session = findSession(req.headers.authorization)
+
+    if (!session) {
+        return res.json({ error: 'invalid auth' })
+    }
+
+    let sessionUser = await getUserData(session.name)
+
+    if (!sessionUser.admin) {
+        return res.json({ error: "this action can only be performed by an admin" })
+    }
+
+    let user = await getUserData(req.params.name)
+
+    if (!user) {
+        return res.json({ error: "no user found. cannot delete" })
+    }
+
+    console.log(`${sessionUser.name} is deleting all data for ${user.name}`)
+
+    await reactions.remove({ name: user.name })
+    await persistedSessions.remove({ name: user.name })
+    await stars.remove({ name: user.name })
+    await users.remove({ name: user.name })
+    res.json({ ok: 'user gone. :(' })
 })
 
 app.get('/api/user/:user/picture', cors(), async (req, res) => {
@@ -261,7 +309,7 @@ app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // react
         if (!emojis.includes(req.body.emoji)) {
             let reactionWithEmoji = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji }) // find a reaction with that emoji to check if thats a valid reaction option (its set by admin if invalid)
 
-            if(!reactionWithEmoji && !user.admin) return res.json({ error: 'invalid emoji' })
+            if (!reactionWithEmoji && !user.admin) return res.json({ error: 'invalid emoji' })
         }
         let postReaction = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji, user: user.name })
         if (postReaction) {
@@ -297,6 +345,10 @@ app.get('/auth/handle', async (req, res) => {
 
         let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${authData.username}/`)
         let scratchData = await scratchResponse.json()
+
+        if(!scratchData.username) {
+            return res.json({ error: "user not found on scratch" })
+        }
 
         //TODO: don't assume the scratch user was found
 
@@ -371,7 +423,8 @@ app.get('/auth/me', cors(corsOptions), async (req, res) => {
 })
 
 app.get('/ban-info/:name', (req, res) => {
-    res.redirect('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+    // TODO: verify user is banned and perform some sort of authentication on this route to allow for ban message
+    res.send("you've been banned from ocular due to repeated misuse of the service. you can continue to use ocular logged out.")
 })
 
 // 404. catch all which redirects to frontend
