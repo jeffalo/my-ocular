@@ -67,6 +67,11 @@ app.get('/api/user/:name', cors(), async (req, res) => {
     if (!noReplace && user) {
         user.status = user.status.replace(/(?<!\\){joke}/g, jokes[Math.floor(Math.random() * jokes.length)])
         user.status = user.status.replace(/\\({joke})/g, "$1")
+  
+        user.status = filterWords(user.status, "(removed)", "lmao", "ScratchAddons", "Scratch Addons", "Addons")
+        // Anything after "(removed)" are the blacklisted words.
+        // Don't mention ScratchAddons if your website is shared on the scratch community ;)
+        // I honestly don't know why i censored "Lmao" but anyways
 
         user.status = user.status.replace(/(?<!\\){online}/g, sessions.length)
         user.status = user.status.replace(/\\({online})/g, "$1")
