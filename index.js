@@ -224,6 +224,10 @@ app.post('/api/star/:id', cors(corsOptions), async (req, res) => { // stars a po
         if (!session) {
             return res.json({ error: 'invalid auth' })
         }
+        let checkRes = await fetch(`https://scratch.mit.edu/discuss/post/${req.params.id}/source/`) // check if the post really exists
+        if (!checkRes.ok) {
+            return res.json({ error: 'post doesnt exist' })
+        }
         let user = await getUserData(session.name)
         if (!user) {
             return res.json({ error: 'invalid auth no user found' })
@@ -235,10 +239,6 @@ app.post('/api/star/:id', cors(corsOptions), async (req, res) => { // stars a po
             res.json({ starred: false })
         } else {
             // add star
-            let checkRes = await fetch(`https://scratch.mit.edu/discuss/post/${req.params.id}/source/`) // check if the post really exists
-            if (!checkRes.ok) {
-                return res.json({ error: 'post doesnt exist' })
-            }
             starredPost = await stars.insert({ post: req.params.id, user: user.name })
             res.json({ starred: true })
         }
