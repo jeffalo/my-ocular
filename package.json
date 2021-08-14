@@ -16,5 +16,8 @@
     "mongodb": "^3.6.3",
     "monk": "^7.3.3",
     "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
   }
 }
