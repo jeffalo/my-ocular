@@ -463,8 +463,17 @@ async function getPostReactions(id) {
         let postReactions = await reactions.find({ post: id })
         let grouped = []
 
-        let postEmojis = emojis.slice(); // .slice so the original cant be edited
+        // for compatibility with old data, replace reactions where the emoji is "squirrel" with ":squirrel:"
+        
+        postReactions = postReactions.map(reaction => {
+            if (reaction.emoji === "squirrel") {
+                reaction.emoji = ":squirrel:"
+            }
+            return reaction
+        })
 
+        let postEmojis = emojis.slice(); // .slice so the original cant be edited
+        
         postReactions.forEach(reaction => {
             if (!postEmojis.includes(reaction.emoji)) postEmojis.push(reaction.emoji)
         })
