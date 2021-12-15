@@ -334,6 +334,8 @@ app.get('/auth/begin', (req, res) => {
 })
 
 app.get('/auth/handle', async (req, res) => {
+    return res.send({ error: "ocular authentication is currently disabled due to an ocular authentication 0-day on the forums. we take security issues pretty seriously, so this functionality has been temporarily disabled until we can verify that any potential danger has been fixed. you can continue to use ocular logged out until then." })
+    
     // the user is back from hampton's thing.
     const private = req.query.privateCode
 
