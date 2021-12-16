@@ -3,7 +3,7 @@ const fetch = require('node-fetch')
 const crypto = require('crypto')
 
 const express = require('express');
-const db = require('monk')(process.env.MONGO_URL || 'localhost/my-ocular')
+const db = require('monk')(process.env.MONGO_URL || 'localhost/my-ocular-other')
 
 const users = db.get('users')
 const stars = db.get('stars')
@@ -334,7 +334,7 @@ app.get('/auth/begin', (req, res) => {
 })
 
 app.get('/auth/handle', async (req, res) => {
-    return res.send("ocular authentication is currently disabled due to an ocular authentication 0-day on the forums. we take security issues pretty seriously, so this functionality has been temporarily disabled until we can verify that any potential danger has been fixed. you can continue to use ocular logged out until then.")
+    // return res.send("ocular authentication is currently disabled due to an ocular authentication 0-day on the forums. we take security issues pretty seriously, so this functionality has been temporarily disabled until we can verify that any potential danger has been fixed. you can continue to use ocular logged out until then.")
     
     // the user is back from hampton's thing.
     const private = req.query.privateCode
@@ -344,6 +344,14 @@ app.get('/auth/handle', async (req, res) => {
 
     if (authData.valid) {
         // get the proper case of the username instead of url case
+
+        // ensure that redirect was either localhost:8081/auth/handle or my-ocular.jeffalo.net/auth/handle
+
+        let redirect = authData.redirect
+
+        if (redirect != 'localhost:8081/auth/handle' && redirect != 'my-ocular.jeffalo.net/auth/handle') {
+            return res.send('invalid redirect')
+        }
 
         let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${authData.username}/`)
         let scratchData = await scratchResponse.json()
