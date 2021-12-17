@@ -339,7 +339,7 @@ app.get('/auth/handle', async (req, res) => {
     // the user is back from hampton's thing.
     const private = req.query.privateCode
 
-    let authResponse = await fetch('http://fluffyscratch.hampton.pw/auth/verify/v2/' + private)
+    let authResponse = await fetch('http://fluffyscratch.hampton.pw/auth/verify/v2/' + encodeURIComponent(private) +'?redirect=bXktb2N1bGFyLmplZmZhbG8ubmV0L2F1dGgvaGFuZGxl')
     let authData = await authResponse.json()
 
     if (authData.valid) {
