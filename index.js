@@ -59,6 +59,8 @@ app.get('/api/users', cors(corsOptions), async (req, res) => {
     }
 })
 
+let count = 0;
+
 app.get('/api/user/:name', cors(), async (req, res) => {
     let noReplace = req.query.noReplace
     let user = await getUserData(req.params.name.replace('*', ''))
@@ -83,11 +85,22 @@ app.get('/api/user/:name', cors(), async (req, res) => {
         }
     }
 
-    // april fool funnies
-    // decide dog or cat emoji
-    let dogCat = Math.random() < 0.5 ? '🐶' : '🐱'
+    if (user) {
+        // april fool funnies
+        // decide dog or cat emoji
+        let dogCat = Math.random() < 0.5 ? '🐶' : '🐱'
 
-    user.status += ` ${dogCat}`
+        user.status += ` ${dogCat}`
+    
+        // add 1 to the count
+        count++
+
+        // if the username is Jeffalo, replace the status with the count
+
+        if (user.name == 'Jeffalo') {
+            user.status += ` ${count}`
+        }
+    }
 
     user ? res.json(user) : res.json({ error: "no user found" })
 })
