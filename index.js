@@ -85,6 +85,9 @@ app.get('/api/user/:name', cors(), async (req, res) => {
         }
     }
 
+    // add 1 to the count
+    count++
+
     if (user) {
         // april fool funnies
         // decide dog or cat emoji
@@ -93,9 +96,6 @@ app.get('/api/user/:name', cors(), async (req, res) => {
         if (user.status) {
             user.status += ` ${dogCat}`
         }
-    
-        // add 1 to the count
-        count++
 
         // if the username is Jeffalo, replace the status with the count
 
