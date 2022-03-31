@@ -90,7 +90,9 @@ app.get('/api/user/:name', cors(), async (req, res) => {
         // decide dog or cat emoji
         let dogCat = Math.random() < 0.5 ? '🐶' : '🐱'
 
-        user.status += ` ${dogCat}`
+        if (user.status) {
+            user.status += ` ${dogCat}`
+        }
     
         // add 1 to the count
         count++
