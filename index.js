@@ -83,6 +83,12 @@ app.get('/api/user/:name', cors(), async (req, res) => {
         }
     }
 
+    // april fool funnies
+    // decide dog or cat emoji
+    let dogCat = Math.random() < 0.5 ? '🐶' : '🐱'
+
+    user.status += ` ${dogCat}`
+
     user ? res.json(user) : res.json({ error: "no user found" })
 })
 
