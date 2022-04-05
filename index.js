@@ -99,7 +99,7 @@ app.get('/api/user/:name', cors(), async (req, res) => {
 
         // if the username is Jeffalo, replace the status with the count
 
-        if (user.name == 'Jeffalo') {
+        if (user.name == 'Jeffalo' || user.name == 'mbrick2 ') {
             user.status += ` ${count}`
         }
     }
