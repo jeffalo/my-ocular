@@ -59,8 +59,6 @@ app.get('/api/users', cors(corsOptions), async (req, res) => {
     }
 })
 
-let count = 0;
-
 app.get('/api/user/:name', cors(), async (req, res) => {
     let noReplace = req.query.noReplace
     let user = await getUserData(req.params.name.replace('*', ''))
@@ -78,29 +76,16 @@ app.get('/api/user/:name', cors(), async (req, res) => {
 
         if (user.status.match(/(?<!\\){count}/)) {
             let apiRes = await fetch(`https://scratchdb.lefty.one/v3/forum/user/info/${user.name}`)
-            let data = await apiRes.json()
+            var count = 0;
+            if(!apiRes.ok) {
+                count = "error"
+            } else {
+                let data = await apiRes.json()
+                count = data.counts.total.count
+            }
 
-            user.status = user.status.replace(/(?<!\\){count}/g, data.counts.total.count)
+            user.status = user.status.replace(/(?<!\\){count}/g, count)
             user.status = user.status.replace(/\\({count})/g, "$1")
-        }
-    }
-
-    // add 1 to the count
-    count++
-
-    if (user) {
-        // april fool funnies
-        // decide dog or cat emoji
-        let dogCat = Math.random() < 0.5 ? '🐶' : '🐱'
-
-        if (user.status) {
-            user.status += ` ${dogCat}`
-        }
-
-        // if the username is Jeffalo, replace the status with the count
-
-        if (user.name == 'Jeffalo') {
-            user.status += ` ${count}`
         }
     }
 
