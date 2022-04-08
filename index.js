@@ -62,12 +62,12 @@ app.get('/api/users', cors(corsOptions), async (req, res) => {
 app.get('/api/user/:name', cors(), async (req, res) => {
     let noReplace = req.query.noReplace
     let user = await getUserData(req.params.name.replace('*', ''))
-    let aviateData = await fetch(`https://aviateapp.eu.org/api/${user.name}${noReplace ? '?code=true' : ''}`);
+    let aviateData = await fetch(`https://aviateapp.eu.org/api/${user.name}${noReplace ? '?code=true' : ''}`)
     
     if (aviateData.ok) {
-        let json = await aviateData.json();
+        let json = await aviateData.json()
         
-        user.status = json.status;
+        user.status = json.status
     } else if (!noReplace && user) {
         let allUsers = await users.find()
         
