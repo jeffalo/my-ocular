@@ -1,6 +1,7 @@
 require('dotenv').config()
 const fetch = require('node-fetch')
 const crypto = require('crypto')
+let count = 0;
 
 const express = require('express');
 const db = require('monk')(process.env.MONGO_URL || 'localhost/my-ocular-other')
@@ -63,10 +64,15 @@ app.get('/api/user/:name', cors(), async (req, res) => {
     let noReplace = req.query.noReplace
     let user = await getUserData(req.params.name.replace('*', ''))
     let allUsers = await users.find()
+    
+    requestCount++
 
     if (!noReplace && user) {
         user.status = user.status.replace(/(?<!\\){joke}/g, jokes[Math.floor(Math.random() * jokes.length)])
         user.status = user.status.replace(/\\({joke})/g, "$1")
+        
+        user.status = user.status.replace(/(?<!\\){requests}/g, requestCount)
+        user.status = user.status.replace(/\\({requests})/g, "$1")
 
         user.status = user.status.replace(/(?<!\\){online}/g, sessions.length)
         user.status = user.status.replace(/\\({online})/g, "$1")
