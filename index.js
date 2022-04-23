@@ -335,7 +335,7 @@ app.get('/auth/begin', (req, res) => {
     if (req.get('host') == 'localhost:8081') {
         res.redirect(`https://auth.itinerary.eu.org/auth/?redirect=bG9jYWxob3N0OjgwODEvYXV0aC9oYW5kbGU=&name=Ocular`)
     } else {
-        res.redirect(`https://auth.itinerary.eu.org/auth/?redirect=bXktb2N1bGFyLmplZmZhbG8ubmV0L2F1dGgvaGFuZGxl&name=Ocular`)
+        res.redirect(`https://auth.itinerary.eu.org/auth/?redirect=aHR0cDovL2xvY2FsaG9zdDo4MDgxL2F1dGgvaGFuZGxl&name=Ocular`)
     }
 })
 
