@@ -333,9 +333,9 @@ app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // react
 
 app.get('/auth/begin', (req, res) => {
     if (req.get('host') == 'localhost:8081') {
-        res.redirect(`https://fluffyscratch.hampton.pw/auth/getKeys/v2?redirect=bG9jYWxob3N0OjgwODEvYXV0aC9oYW5kbGU=`)
+        res.redirect(`https://auth.itinerary.eu.org/auth/?redirect=bG9jYWxob3N0OjgwODEvYXV0aC9oYW5kbGU=&name=ocular`)
     } else {
-        res.redirect(`https://fluffyscratch.hampton.pw/auth/getKeys/v2?redirect=bXktb2N1bGFyLmplZmZhbG8ubmV0L2F1dGgvaGFuZGxl`)
+        res.redirect(`https://auth.itinerary.eu.org/auth/?redirect=bXktb2N1bGFyLmplZmZhbG8ubmV0L2F1dGgvaGFuZGxl&name=ocular`)
     }
 })
 
@@ -345,7 +345,7 @@ app.get('/auth/handle', async (req, res) => {
     // the user is back from hampton's thing.
     const private = req.query.privateCode
 
-    let authResponse = await fetch('http://fluffyscratch.hampton.pw/auth/verify/v2/' + encodeURIComponent(private) +'?redirect=bXktb2N1bGFyLmplZmZhbG8ubmV0L2F1dGgvaGFuZGxl')
+    let authResponse = await fetch('https://auth.itinerary.eu.org/api/auth/verifyToken?privateCode=' + encodeURIComponent(private) +'&redirect=bXktb2N1bGFyLmplZmZhbG8ubmV0L2F1dGgvaGFuZGxl')
     let authData = await authResponse.json()
 
     if (authData.valid) {
