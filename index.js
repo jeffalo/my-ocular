@@ -272,11 +272,11 @@ app.get('/api/starred', cors(corsOptions), async (req, res) => {  // returns lis
         }
         const page = parseInt(req.query.page) || 0;
 
-        let starredPosts = await stars.find({ user: user.name }, { sort: { _id: -1 }, limit: 15, skip: page * 15 })
+        const starredPosts = await stars.find({ user: user.name }, { sort: { _id: -1 }, limit: 15, skip: page * 15 })
         const ids = starredPosts.map(data => data.post)
 
-        let postsToReturn = []
-        let requests = ids.map(id => {
+        const postsToReturn = []
+        const requests = ids.map(id => {
             //create a promise for each API call
             return new Promise((resolve, reject) => {
                 fetch(`https://scratchdb.lefty.one/v3/forum/post/info/${id}`)
@@ -313,16 +313,16 @@ app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // react
         if (typeof user === 'undefined') {
             return res.json({ error: 'invalid auth; no user found' })
         }
-        let checkRes = await fetch(`https://scratch.mit.edu/discuss/post/${req.params.id}/source/`) // check if the post really exists
+        const checkRes = await fetch(`https://scratch.mit.edu/discuss/post/${req.params.id}/source/`) // check if the post really exists
         if (!checkRes.ok) {
             return res.json({ error: 'post doesnt exist' })
         }
         if (!emojis.includes(req.body.emoji)) {
-            let reactionWithEmoji = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji }) // find a reaction with that emoji to check if thats a valid reaction option (its set by admin if invalid)
+            const reactionWithEmoji = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji }) // find a reaction with that emoji to check if thats a valid reaction option (its set by admin if invalid)
 
             if (!reactionWithEmoji && typeof user === 'undefined'.admin) return res.json({ error: 'invalid emoji' })
         }
-        let postReaction = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji, user: user.name })
+        const postReaction = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji, user: user.name })
         if (postReaction) {
             // remove reaction
             await reactions.remove(postReaction._id)
@@ -331,7 +331,7 @@ app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // react
             await reactions.insert({ post: req.params.id, user: user.name, emoji: req.body.emoji })
         }
         // finally return all reactions
-        let postReactions = await getPostReactions(req.params.id)
+        const postReactions = await getPostReactions(req.params.id)
         res.json(postReactions)
     }
 })
@@ -350,35 +350,33 @@ app.get('/auth/handle', async (req, res) => {
     const redirectURL = `${req.protocol}://${req.get('host')}/auth/handle`; // cloudflare makes this work
     // the user is back from auth.
     const private = req.query.privateCode;
-    let authResponse = await fetch(`https://auth.itinerary.eu.org/api/auth/verifyToken?privateCode=${encodeURIComponent(private)}`)
-    let authData = await authResponse.json()
-    if (authData.valid) {
+    const authResponse = await fetch(`https://auth.itinerary.eu.org/api/auth/verifyToken?privateCode=${encodeURIComponent(private)}`)
+    const { redirect, valid: authValid } = await authResponse.json()
+    if (authValid) {
         // get the proper case of the username instead of url case
         // ensure that redirect was either localhost:8081/auth/handle or my-ocular.jeffalo.net/auth/handle
-
-        let redirect = authData.redirect
 
         if (redirect !== redirectURL) {
             return res.send('invalid redirect') // todo: frontend
         }
 
-        let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${authData.username}/`, {
+        const scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${authData.username}/`, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0' // fake ua
             },
             method: 'GET'
         })
-        let scratchData = await scratchResponse.json()
+        const scratchData = await scratchResponse.json()
 
         if (!scratchData.username) {
             return res.json({ error: 'user not found on scratch' })
         }
 
         //TODO: don't assume the scratch user was found
-        let foundUser = await getUserData(scratchData.username)
+        const foundUser = await getUserData(scratchData.username)
 
         if (!foundUser) {
-            let now = new Date()
+            const now = new Date()
             foundUser = await users.insert({
                 name: scratchData.username,
                 status: '',
@@ -420,7 +418,7 @@ app.post('/auth/remove', cors(corsOptions), async (req, res) => { // used when l
     if (req.query.token) {
         const session = findSession(req.query.token)
         if (session) {
-            let name = session.name
+            const name = session.name
             removeSession(req.query.token)
             res.json({ ok: `removed session for ${name}` })
         } else {
@@ -484,9 +482,9 @@ async function getPostReactions(id) {
     */
     return new Promise(async (resolve, reject) => {
         const postReactions = await reactions.find({ post: id })
-        let grouped = []
+        const grouped = []
 
-        let postEmojis = [...emojis];
+        const postEmojis = [...emojis];
 
         postReactions.forEach(reaction => {
             if (!postEmojis.includes(reaction.emoji)) postEmojis.push(reaction.emoji)
