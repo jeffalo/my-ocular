@@ -39,10 +39,10 @@ app.options('/api/users', cors(corsOptions)) // enable pre-flight request for us
 app.get('/api/users', cors(corsOptions), async (req, res) => {
     // const page = parseInt(req.query.page) || 0;
     // const userList = await users.find({}, { sort: { _id: -1 }, limit: 15, skip: page * 15 })
-    if (typeof req.headers.authorization === "string") {
+    if (typeof req.headers.authorization === 'string') {
         const session = findSession(req.headers.authorization)
 
-        if (typeof session === "undefined") {
+        if (typeof session === 'undefined') {
             return res.json({ error: 'invalid auth' })
         }
 
@@ -51,7 +51,7 @@ app.get('/api/users', cors(corsOptions), async (req, res) => {
         if (!sessionUser.admin) {
             return res.json({ error: `only admins can get a list of users.` })
         }
-        const userList = await users.find({}, { sort: { "meta.updated": -1, _id: -1 } }) // TODO: pagination (see above)
+        const userList = await users.find({}, { sort: { 'meta.updated': -1, _id: -1 } }) // TODO: pagination (see above)
         return res.json(userList)
     }
 
@@ -59,22 +59,22 @@ app.get('/api/users', cors(corsOptions), async (req, res) => {
 })
 
 app.get('/api/user/:name', cors(), async (req, res) => {
-    const noReplace = typeof req.query.noReplace === "string";
+    const noReplace = typeof req.query.noReplace === 'string';
     const user = await getUserData(req.params.name.replace('*', ''))
     const allUsers = await users.find()
 
     if (!noReplace && user) {
         user.status = user.status.replace(/(?<!\\){joke}/g, jokes[Math.floor(Math.random() * jokes.length)])
-        user.status = user.status.replace(/\\({joke})/g, "$1")
+        user.status = user.status.replace(/\\({joke})/g, '$1')
 
         user.status = user.status.replace(/(?<!\\){online}/g, sessions.length)
-        user.status = user.status.replace(/\\({online})/g, "$1")
+        user.status = user.status.replace(/\\({online})/g, '$1')
 
         user.status = user.status.replace(/(?<!\\){total}/g, allUsers.length)
-        user.status = user.status.replace(/\\({total})/g, "$1")
+        user.status = user.status.replace(/\\({total})/g, '$1')
 
         if (user.status.match(/(?<!\\){count}/)) {
-            let count = "error"; // dont use number since it errors
+            let count = 'error'; // dont use number since it errors
             try {
                 const controller = new AbortController();
                 const { signal } = controller;
@@ -87,25 +87,25 @@ app.get('/api/user/:name', cors(), async (req, res) => {
 
                 if (apiRes.ok) {
                     const data = await apiRes.json();
-                    count = data?.counts?.total?.count?.toString() || "error";
+                    count = data?.counts?.total?.count?.toString() || 'error';
                 }
             } catch {};
 
             user.status = user.status.replace(/(?<!\\){count}/g, count)
-            user.status = user.status.replace(/\\({count})/g, "$1")
+            user.status = user.status.replace(/\\({count})/g, '$1')
         }
     }
 
-    user ? res.json(user) : res.json({ error: "no user found" })
+    user ? res.json(user) : res.json({ error: 'no user found' })
 })
 
 app.options('/api/user/:name', cors(corsOptions)) // enable pre-flight request for updating user
 
 app.put('/api/user/:name', cors(), async (req, res) => {
-    if (typeof req.headers.authorization === "string") {
+    if (typeof req.headers.authorization === 'string') {
         const session = findSession(req.headers.authorization)
 
-        if (typeof session === "undefined") {
+        if (typeof session === 'undefined') {
             return res.json({ error: 'invalid auth' })
         }
 
@@ -130,11 +130,11 @@ app.put('/api/user/:name', cors(), async (req, res) => {
                 if (req.body.banned) {
                     await users.update({ name: user.name }, { $set: { banned: req.body.banned } })
                 } else {
-                    await users.update({ name: user.name }, { $unset: { banned: "" } })
+                    await users.update({ name: user.name }, { $unset: { banned: '' } })
                 }
             }
 
-            await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
+            await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, 'meta.updatedBy': sessionUser.name, 'meta.updated': now.toISOString() } })
 
 
             return res.json({ ok: 'user updated' })
@@ -144,8 +144,8 @@ app.put('/api/user/:name', cors(), async (req, res) => {
             const scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${req.params.name}/`) // get the proper case of the username instead of whatever admin inputted
             const scratchData = await scratchResponse.json()
 
-            if (typeof scratchData.username === "undefined") {
-                return res.json({ error: "user not found on scratch" })
+            if (typeof scratchData.username === 'undefined') {
+                return res.json({ error: 'user not found on scratch' })
             }
 
             const now = new Date()
@@ -166,26 +166,26 @@ app.put('/api/user/:name', cors(), async (req, res) => {
 })
 
 app.delete('/api/user/:name', cors(), async (req, res) => {
-    if (typeof req.headers.authorization !== "string") {
+    if (typeof req.headers.authorization !== 'string') {
         return res.json({ error: 'you need auth' })
     }
 
     const session = findSession(req.headers.authorization)
 
-    if (typeof session === "undefined") {
+    if (typeof session === 'undefined') {
         return res.json({ error: 'invalid auth' })
     }
 
     const sessionUser = await getUserData(session.name)
 
     if (!sessionUser.admin) {
-        return res.json({ error: "this action can only be performed by an admin" })
+        return res.json({ error: 'this action can only be performed by an admin' })
     }
 
     const user = await getUserData(req.params.name)
 
-    if (typeof user === "undefined") {
-        return res.json({ error: "no user found. cannot delete" })
+    if (typeof user === 'undefined') {
+        return res.json({ error: 'no user found. cannot delete' })
     }
 
     console.log(`${sessionUser.name} is deleting all data for ${user.name}`)
@@ -207,15 +207,15 @@ app.get('/api/user/:user/picture', cors(), async (req, res) => {
 app.options('/api/starred/:id', cors(corsOptions)) // enable pre-flight request for getting star data
 
 app.get('/api/starred/:id', cors(corsOptions), async (req, res) => { // returns whether the logged in user starred a post
-    if (typeof req.headers.authorization !== "string") {
+    if (typeof req.headers.authorization !== 'string') {
         res.json({ error: 'you need auth' })
     } else {
         const session = findSession(req.headers.authorization)
-        if (typeof session !== "undefined") {
+        if (typeof session !== 'undefined') {
             return res.json({ error: 'invalid auth' })
         }
         const user = await getUserData(session.name)
-        if (typeof user === "undefined") {
+        if (typeof user === 'undefined') {
             return res.json({ error: 'invalid auth no user found' })
         }
 
@@ -228,7 +228,7 @@ app.get('/api/starred/:id', cors(corsOptions), async (req, res) => { // returns 
 app.options('/api/star/:id', cors(corsOptions)) // enable pre-flight request starring post
 
 app.post('/api/star/:id', cors(corsOptions), async (req, res) => { // stars a post
-    if (typeof req.headers.authorization !== "string") {
+    if (typeof req.headers.authorization !== 'string') {
         res.json({ error: 'you need auth' })
     } else {
         const session = findSession(req.headers.authorization)
@@ -240,7 +240,7 @@ app.post('/api/star/:id', cors(corsOptions), async (req, res) => { // stars a po
             return res.json({ error: 'post doesnt exist' })
         }
         const user = await getUserData(session.name)
-        if (typeof user === "undefined") {
+        if (typeof user === 'undefined') {
             return res.json({ error: 'invalid auth no user found' })
         }
         const starredPost = await stars.findOne({ post: req.params.id, user: user.name })
@@ -259,21 +259,21 @@ app.post('/api/star/:id', cors(corsOptions), async (req, res) => { // stars a po
 app.options('/api/starred', cors(corsOptions)) // enable pre-flight request for starred post list
 
 app.get('/api/starred', cors(corsOptions), async (req, res) => {  // returns list of starred posts
-    if (typeof req.headers.authorization !== "string") {
+    if (typeof req.headers.authorization !== 'string') {
         res.json({ error: 'you need auth' })
     } else {
-        let session = findSession(req.headers.authorization)
+        const session = findSession(req.headers.authorization)
         if (!session) {
             return res.json({ error: 'invalid auth' })
         }
         const user = await getUserData(session.name)
-        if (typeof user === "undefined") {
+        if (typeof user === 'undefined') {
             return res.json({ error: 'invalid auth no user found' })
         }
         const page = parseInt(req.query.page) || 0;
 
         let starredPosts = await stars.find({ user: user.name }, { sort: { _id: -1 }, limit: 15, skip: page * 15 })
-        let ids = starredPosts.map(data => data.post)
+        const ids = starredPosts.map(data => data.post)
 
         let postsToReturn = []
         let requests = ids.map(id => {
@@ -302,7 +302,7 @@ app.get('/api/reactions/:id', cors(), async (req, res) => { // returns all of th
 app.options('/api/reactions/:id', cors(corsOptions)) // enable pre-flight request for reacting to a post
 
 app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // reacts to a post, then returns new reaction list
-    if (typeof req.headers.authorization !== "string") {
+    if (typeof req.headers.authorization !== 'string') {
         res.json({ error: 'you need auth' })
     } else {
         const session = findSession(req.headers.authorization)
@@ -310,7 +310,7 @@ app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // react
             return res.json({ error: 'invalid auth' })
         }
         const user = await getUserData(session.name)
-        if (typeof user === "undefined") {
+        if (typeof user === 'undefined') {
             return res.json({ error: 'invalid auth; no user found' })
         }
         let checkRes = await fetch(`https://scratch.mit.edu/discuss/post/${req.params.id}/source/`) // check if the post really exists
@@ -320,7 +320,7 @@ app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // react
         if (!emojis.includes(req.body.emoji)) {
             let reactionWithEmoji = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji }) // find a reaction with that emoji to check if thats a valid reaction option (its set by admin if invalid)
 
-            if (!reactionWithEmoji && typeof user === "undefined".admin) return res.json({ error: 'invalid emoji' })
+            if (!reactionWithEmoji && typeof user === 'undefined'.admin) return res.json({ error: 'invalid emoji' })
         }
         let postReaction = await reactions.findOne({ post: req.params.id, emoji: req.body.emoji, user: user.name })
         if (postReaction) {
@@ -337,7 +337,7 @@ app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // react
 })
 
 app.get('/auth/begin', (req, res) => {
-    const redirectURL = `${req.protocol}://${req.get("host")}/auth/handle`;
+    const redirectURL = `${req.protocol}://${req.get('host')}/auth/handle`;
     const encodedRedirectURL = Buffer.from(redirectURL).toString('base64');
 
     res.redirect(307,
@@ -346,8 +346,8 @@ app.get('/auth/begin', (req, res) => {
 })
 
 app.get('/auth/handle', async (req, res) => {
-    // return res.send("ocular authentication is currently disabled due to an ocular authentication 0-day on the forums. we take security issues pretty seriously, so this functionality has been temporarily disabled until we can verify that any potential danger has been fixed. you can continue to use ocular logged out until then.")
-    const redirectURL = `${req.protocol}://${req.get("host")}/auth/handle`; // cloudflare makes this work
+    // return res.send('ocular authentication is currently disabled due to an ocular authentication 0-day on the forums. we take security issues pretty seriously, so this functionality has been temporarily disabled until we can verify that any potential danger has been fixed. you can continue to use ocular logged out until then.')
+    const redirectURL = `${req.protocol}://${req.get('host')}/auth/handle`; // cloudflare makes this work
     // the user is back from auth.
     const private = req.query.privateCode;
     let authResponse = await fetch(`https://auth.itinerary.eu.org/api/auth/verifyToken?privateCode=${encodeURIComponent(private)}`)
@@ -364,14 +364,14 @@ app.get('/auth/handle', async (req, res) => {
 
         let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${authData.username}/`, {
             headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0" // fake ua
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0' // fake ua
             },
-            method: "GET"
+            method: 'GET'
         })
         let scratchData = await scratchResponse.json()
 
         if (!scratchData.username) {
-            return res.json({ error: "user not found on scratch" })
+            return res.json({ error: 'user not found on scratch' })
         }
 
         //TODO: don't assume the scratch user was found
@@ -403,7 +403,7 @@ app.get('/auth/handle', async (req, res) => {
 
 app.get('/auth/info', cors(corsOptions), async (req, res) => {
     if (req.query.token) {
-        let session = findSessionByOneTimeToken(req.query.token)
+        const session = findSessionByOneTimeToken(req.query.token)
         if (session) {
             res.json({ name: session.name, token: session.token })
             await persistedSessions.update({ oneTimeToken: req.query.token }, { $set: { oneTimeToken: null } })
@@ -418,7 +418,7 @@ app.get('/auth/info', cors(corsOptions), async (req, res) => {
 
 app.post('/auth/remove', cors(corsOptions), async (req, res) => { // used when logging out or cancelling login. discards the session
     if (req.query.token) {
-        let session = findSession(req.query.token)
+        const session = findSession(req.query.token)
         if (session) {
             let name = session.name
             removeSession(req.query.token)
@@ -433,21 +433,21 @@ app.post('/auth/remove', cors(corsOptions), async (req, res) => { // used when l
 
 app.options('/auth/me', cors(corsOptions)) // enable pre-flight request for getting user
 app.get('/auth/me', cors(corsOptions), async (req, res) => {
-    if (typeof req.headers.authorization !== "string") {
+    if (typeof req.headers.authorization !== 'string') {
         res.json({ error: 'you need auth' })
     } else {
-        let session = findSession(req.headers.authorization)
+        const session = findSession(req.headers.authorization)
         if (!session) {
             return res.json({ error: 'invalid auth' })
         }
         const user = await getUserData(session.name)
-        user ? res.json(user) : res.json({ error: "no user found.. this shouldn't happen" })
+        user ? res.json(user) : res.json({ error: 'no user found.. this shouldn\'t happen' })
     }
 })
 
 app.get('/ban-info/:name', (req, res) => {
     // TODO: verify user is banned and perform some sort of authentication on this route to allow for ban message
-    res.send("you've been banned from ocular due to repeated misuse of the service. you can continue to use ocular logged out.")
+    res.send('you\'ve been banned from ocular due to repeated misuse of the service. you can continue to use ocular logged out.')
 })
 
 // 404. catch all which redirects to frontend
@@ -457,11 +457,11 @@ app.use((req, res) => {
 })
 
 function getUserData(name) {
-    const regexName = "^" + escapeRegExp(name) + "$";
+    const regexName = '^' + escapeRegExp(name) + '$';
     return new Promise(async (resolve, reject) => {
         try {
             const user = await users.findOne({
-                name: { $regex: new RegExp(regexName, "i") }
+                name: { $regex: new RegExp(regexName, 'i') }
             });
             resolve(user);
         } catch (error) {
@@ -474,7 +474,7 @@ async function getPostReactions(id) {
     /* format:
     [
         {
-            emoji: "😀",
+            emoji: '😀',
             reactions: [
                 (stuff from db, but really just needs username)
             ]
@@ -519,15 +519,15 @@ async function generateToken() {
     const buffer = await new Promise((resolve, reject) => {
         crypto.randomBytes(256, function (ex, buffer) {
             if (ex) {
-                reject("error generating token");
+                reject('error generating token');
             }
             resolve(buffer);
         });
     });
     const token = crypto
-        .createHash("sha1")
+        .createHash('sha1')
         .update(buffer)
-        .digest("hex");
+        .digest('hex');
 
     return token;
 }
@@ -539,7 +539,7 @@ async function addSession(token, name, oneTimeToken, time = false) {
     sessions.push({ name, token, oneTimeToken });
     await persistedSessions.insert({ name, token, oneTimeToken })
 
-    if (time) { // i doubt any sessions will be set with a time, because auth isnt fun to do. sessions should last "forever"
+    if (time) { // i doubt any sessions will be set with a time, because auth isnt fun to do. sessions should last 'forever'
         setTimeout(() => {
             // remove token after time seconds
             removeSession(token);
