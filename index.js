@@ -332,42 +332,44 @@ app.post('/api/reactions/:id', cors(corsOptions), async (req, res) => { // react
 })
 
 app.get('/auth/begin', (req, res) => {
-    if (req.get('host') == 'localhost:8081') {
-        res.redirect(`https://fluffyscratch.hampton.pw/auth/getKeys/v2?redirect=bG9jYWxob3N0OjgwODEvYXV0aC9oYW5kbGU=`)
-    } else {
-        res.redirect(`https://fluffyscratch.hampton.pw/auth/getKeys/v2?redirect=bXktb2N1bGFyLmplZmZhbG8ubmV0L2F1dGgvaGFuZGxl`)
-    }
+    const redirectURL = `${req.protocol}://${req.get("host")}/auth/handle`;
+    const encodedRedirectURL = Buffer.from(redirectURL).toString('base64');
+
+    res.redirect(307,
+        `https://auth.itinerary.eu.org/auth/?name=ocular&redirect=${encodedRedirectURL}`
+    )
 })
 
 app.get('/auth/handle', async (req, res) => {
     // return res.send("ocular authentication is currently disabled due to an ocular authentication 0-day on the forums. we take security issues pretty seriously, so this functionality has been temporarily disabled until we can verify that any potential danger has been fixed. you can continue to use ocular logged out until then.")
-    
-    // the user is back from hampton's thing.
-    const private = req.query.privateCode
-
-    let authResponse = await fetch('http://fluffyscratch.hampton.pw/auth/verify/v2/' + encodeURIComponent(private) +'?redirect=bXktb2N1bGFyLmplZmZhbG8ubmV0L2F1dGgvaGFuZGxl')
+    const redirectURL = `${req.protocol}://${req.get("host")}/auth/handle`; // cloudflare makes this work
+    // the user is back from auth.
+    const private = req.query.privateCode;
+    let authResponse = await fetch(`https://auth.itinerary.eu.org/api/auth/verifyToken?privateCode=${encodeURIComponent(private)}`)
     let authData = await authResponse.json()
-
     if (authData.valid) {
         // get the proper case of the username instead of url case
-
         // ensure that redirect was either localhost:8081/auth/handle or my-ocular.jeffalo.net/auth/handle
 
         let redirect = authData.redirect
 
-        if (redirect != 'localhost:8081/auth/handle' && redirect != 'my-ocular.jeffalo.net/auth/handle') {
-            return res.send('invalid redirect')
+        if (redirect !== redirectURL) {
+            return res.send('invalid redirect') // todo: frontend
         }
 
-        let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${authData.username}/`)
+        let scratchResponse = await fetch(`https://api.scratch.mit.edu/users/${authData.username}/`, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101 Firefox/102.0" // fake ua
+            },
+            method: "GET"
+        })
         let scratchData = await scratchResponse.json()
 
-        if(!scratchData.username) {
+        if (!scratchData.username) {
             return res.json({ error: "user not found on scratch" })
         }
 
         //TODO: don't assume the scratch user was found
-
         let foundUser = await getUserData(scratchData.username)
 
         if (!foundUser) {
