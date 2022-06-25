@@ -75,14 +75,22 @@ app.get('/api/user/:name', cors(), async (req, res) => {
         user.status = user.status.replace(/\\({total})/g, "$1")
 
         if (user.status.match(/(?<!\\){count}/)) {
-            let apiRes = await fetch(`https://scratchdb.lefty.one/v3/forum/user/info/${user.name}`)
-            var count = 0;
-            if(!apiRes.ok) {
-                count = "error"
-            } else {
-                let data = await apiRes.json()
-                count = data.counts.total.count
-            }
+            let count = 'error';
+            try {
+                const controller = new AbortController();
+
+                setTimeout(() => {
+                    controller.abort()
+                }, 5000)
+                const apiRes = await fetch(`https://scratchdb.lefty.one/v3/forum/user/info/${user.name}`, {
+                    signal: controller.signal,
+                });
+                
+                if (apiRes.ok) {
+                    const data = await apiRes.json();
+                    count = data?.counts?.total?.count;
+                }
+            } catch {};
 
             user.status = user.status.replace(/(?<!\\){count}/g, count)
             user.status = user.status.replace(/\\({count})/g, "$1")
@@ -271,14 +279,31 @@ app.get('/api/starred', cors(corsOptions), async (req, res) => {  // returns lis
         let ids = starredPosts.map(data => data.post)
 
         let postsToReturn = []
-        let requests = ids.map(id => {
-            //create a promise for each API call
-            return new Promise((resolve, reject) => {
-                fetch(`https://scratchdb.lefty.one/v3/forum/post/info/${id}`)
-                    .then(response => response.json())
-                    .then(data => resolve(data))
-            })
+        let stop = false;
+        let requests = ids.map(async (id) => {
+            try {
+                const controller = new AbortController();
+
+                setTimeout(() => {
+                    controller.abort()
+                    stop = true
+                }, 5000)
+                
+                const resp = await fetch(`https://scratchdb.lefty.one/v3/forum/post/info/${id}`, {
+                    signal: controller.signal
+                });
+                
+                if (resp.ok) {
+                    const post = await resp.json()
+                    return post
+                }
+            } catch {
+                stop = true;
+            };
         })
+        if (stop) {
+            return res.json({ error: 'scratchdb is down' })
+        }
         Promise.all(requests).then((responses) => {
             //this gets called when all the promises have resolved/rejected.
             responses.forEach(response => {
