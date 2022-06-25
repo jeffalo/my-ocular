@@ -92,7 +92,7 @@ app.get('/api/user/:name', cors(), async (req, res) => {
                 }
             } catch {};
 
-            user.status = user.status.replace(/(?<!\\){count}/g, count)
+            user.status = user.status.replace(/(?<!\\){count}/g, count || 'error')
             user.status = user.status.replace(/\\({count})/g, "$1")
         }
     }
