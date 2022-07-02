@@ -129,7 +129,7 @@ app.put('/api/user/:name', cors(), async (req, res) => {
                 }
             }
 
-            await users.update({ name: user.name }, { $set: { status: req.body.status, color: req.body.color, "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
+            await users.update({ name: user.name }, { $set: { status: req.body.status?.toString(), color: req.body.color?.toString(), "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
 
 
             res.json({ ok: 'user updated' })
