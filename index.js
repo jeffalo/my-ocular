@@ -123,13 +123,13 @@ app.put('/api/user/:name', cors(), async (req, res) => {
             if (sessionUser.admin) {
                 // ban user
                 if (req.body.banned) {
-                    await users.update({ name: user.name }, { $set: { banned: req.body.banned } })
+                    await users.update({ name: user.name }, { $set: { banned: Boolean(req.body.banned) } })
                 } else {
                     await users.update({ name: user.name }, { $unset: { banned: "" } })
                 }
             }
 
-            await users.update({ name: user.name }, { $set: { status: req.body.status?.toString(), color: req.body.color?.toString(), "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
+            await users.update({ name: user.name }, { $set: { status: String(req.body.status), color: String(req.body.color), "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
 
 
             res.json({ ok: 'user updated' })
