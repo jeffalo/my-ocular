@@ -136,6 +136,9 @@ app.put('/api/user/:name', cors(), async (req, res) => {
                     await users.update({ name: user.name }, { $unset: { banned: "" } })
                 }
             }
+            if (String(req.body.status).length > 300) {
+                return res.json({ error: "status length exceeds 300 characters" })
+            }
 
             await users.update({ name: user.name }, { $set: { status: String(req.body.status), color: String(req.body.color), "meta.updatedBy": sessionUser.name, "meta.updated": now.toISOString() } })
 
